@@ -1,13 +1,16 @@
 // import 'package:camera/camera.dart';
 // import 'package:chatapp/CustomUI/CameraUI.dart';
+import 'dart:io';
+
 import 'package:chatapp/CustomUI/OwnMessgaeCrad.dart';
 import 'package:chatapp/CustomUI/ReplyCard.dart';
 import 'package:chatapp/Model/ChatModel.dart';
 import 'package:chatapp/Model/MessageModel.dart';
-import 'package:emoji_picker/emoji_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:socket_io_client/socket_io_client.dart';
 
 class IndividualPage extends StatefulWidget {
   IndividualPage({Key key, this.chatModel, this.sourchat}) : super(key: key);
@@ -26,6 +29,7 @@ class _IndividualPageState extends State<IndividualPage> {
   TextEditingController _controller = TextEditingController();
   ScrollController _scrollController = ScrollController();
   IO.Socket socket;
+
   @override
   void initState() {
     super.initState();
@@ -43,25 +47,37 @@ class _IndividualPageState extends State<IndividualPage> {
 
   void connect() {
     // MessageModel messageModel = MessageModel(sourceId: widget.sourceChat.id.toString(),targetId: );
-    socket = IO.io("http://192.168.0.106:5000", <String, dynamic>{
-      "transports": ["websocket"],
-      "autoConnect": false,
-    });
+    // socket = IO.io("http://172.10.100.46:5000", <String, dynamic>{
+    //   "transports": ["websocket"],
+    //   "autoConnect": false,
+    // });
+    socket = IO.io(
+        'http://172.10.100.46:5000',
+        OptionBuilder()
+            .setTransports(['websocket'])
+            .setExtraHeaders({'token': 'abc'})
+            .disableAutoConnect()
+            .build());
     socket.connect();
     socket.emit("signin", widget.sourchat.id);
     socket.onConnect((data) {
       print("Connected");
+      socket.on(
+        "private message",
+        (data) {},
+      );
       socket.on("message", (msg) {
-        print(msg);
+        print('asjdakdj ' + msg);
         setMessage("destination", msg["message"]);
         _scrollController.animateTo(_scrollController.position.maxScrollExtent,
             duration: Duration(milliseconds: 300), curve: Curves.easeOut);
       });
     });
-    print(socket.connected);
+    print('sdkjaldjl' + socket.connected.toString());
   }
 
   void sendMessage(String message, int sourceId, int targetId) {
+    socket.connect();
     setMessage("source", message);
     socket.emit("message",
         {"message": message, "sourceId": sourceId, "targetId": targetId});
@@ -448,12 +464,38 @@ class _IndividualPageState extends State<IndividualPage> {
 
   Widget emojiSelect() {
     return EmojiPicker(
-        rows: 4,
-        columns: 7,
+        onBackspacePressed: () {
+          // Backspace-Button tapped logic
+          // Remove this line to also remove the button in the UI
+        },
+        config: Config(
+            columns: 7,
+            emojiSizeMax: 32 * (Platform.isIOS ? 1.30 : 1.0),
+            // Issue: https://github.com/flutter/flutter/issues/28894
+            verticalSpacing: 0,
+            horizontalSpacing: 0,
+            initCategory: Category.RECENT,
+            bgColor: Color(0xFFF2F2F2),
+            indicatorColor: Colors.blue,
+            iconColor: Colors.grey,
+            iconColorSelected: Colors.blue,
+            progressIndicatorColor: Colors.blue,
+            backspaceColor: Colors.blue,
+            skinToneDialogBgColor: Colors.white,
+            skinToneIndicatorColor: Colors.grey,
+            enableSkinTones: true,
+            showRecentsTab: true,
+            recentsLimit: 28,
+            noRecentsText: "No Recents",
+            noRecentsStyle:
+                const TextStyle(fontSize: 20, color: Colors.black26),
+            tabIndicatorAnimDuration: kTabScrollDuration,
+            categoryIcons: const CategoryIcons(),
+            buttonMode: ButtonMode.MATERIAL),
         onEmojiSelected: (emoji, category) {
-          print(emoji);
+          print(category);
           setState(() {
-            _controller.text = _controller.text + emoji.emoji;
+            _controller.text = _controller.text + category.emoji;
           });
         });
   }

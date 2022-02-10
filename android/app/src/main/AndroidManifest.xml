@@ -7,13 +7,12 @@
          FlutterApplication and put your custom class here. -->
     <uses-permission android:name="android.permission.INTERNET" />
     <application
-        android:name="io.flutter.app.FlutterApplication"
-        android:label="chatapp"
+        android:label="@string/appName"
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true">
         
         <activity
-            android:name=".MainActivity"
+            android:name="com.example.chatapp.MainActivity"
             android:launchMode="singleTop"
             android:theme="@style/LaunchTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
